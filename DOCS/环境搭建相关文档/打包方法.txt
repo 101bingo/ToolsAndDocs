@@ -1,0 +1,68 @@
+pyintaller 打包：
+
+首先输入下面的命令，如果pyinstaller没有下载，请pip install pyinstaller
+
+
+
+pyinstaller -F -w -i img.ico main.py
+
+
+或
+pyinstaller -F -c -i img.ico main.py
+(建议先用-c，这样如果打包不成功的话可以看到哪里有错）
+
+-F 指只生成一个exe文件，不生成其他dll文件
+
+-w 不弹出命令行窗口
+
+-i 设定程序图标 ，其后面的ico文件就是程序图标
+main.py 就是要打包的程序
+
+-c?生成的exe文件打开方式为控制台打开。
+
+
+1、创建qrc文件，内容如下：
+
+<RCC>
+  <qresource prefix="/">
+    <file>favicon.ico</file>
+  </qresource>
+</RCC>
+
+2、生成py文件，这个py文件把图片保存成二进制：
+pyrcc5 -o test.py images.qrc
+
+
+3、导入模块，设置图标
+
+import test
+MainWindow.setWindowIcon(QIcon(':/favicon.ico'))
+
+
+方法二：
+还有一种解决方法，可以把图标内嵌入代码
+
+加码：
+import base64
+a="图像位置:"  #如d:\hh.ico
+open_icon = open(a,"rb")
+b64str = base64.b64encode(open_icon.read())
+open_icon.close()
+write_data = "%s=%s\n" % (os.path.basename(a).split('.')[0],b64str)
+f = open("icon.py","a")
+f.write(write_data)
+f.close()
+
+解码：
+import base64,icon
+with open('icon.py') as f_obj:
+        for i in f_obj:
+                aa=i.split('=')
+                with open('%s.ico'%aa[0],'wb+') as ff:
+                        ff.write(base64.b64decode(eval('icon.%s'%aa[0])))
+
+图片打包方法链接：https://blog.csdn.net/caijinzhi/article/details/90768972
+
+记录一下坑：
+1、pyinstaller  -i打包图片时，要求ico尺寸，最好是下载ico图片，不要png、jpg直接修改文件扩展名为ico，不然各种报错
+2、有的版本pyqt5库对系统变量的加载存在bug（Python3.5版本），当打包出现缺少qt5core.dll文件时，在主代码里添加增加环境变量的代码，问题链接：https://blog.csdn.net/zwyact/article/details/99778898
